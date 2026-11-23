@@ -10,13 +10,16 @@ from app.seed import SEED_ROWS
 
 
 class Store:
+    # 影响明细的内部表，不属于 20 个业务模块，概览和通用资源路由都不暴露。
+    INTERNAL_TABLES = {"transform_samples", "transform_refs", "transform_previews"}
+
     def __init__(self) -> None:
         self._tables: dict[str, list[dict[str, Any]]] = {
             name: [dict(row) for row in rows] for name, rows in SEED_ROWS.items()
         }
 
     def module_names(self) -> list[str]:
-        return sorted(self._tables)
+        return sorted(name for name in self._tables if name not in self.INTERNAL_TABLES)
 
     def rows(self, module: str) -> list[dict[str, Any]]:
         return self._tables.setdefault(module, [])

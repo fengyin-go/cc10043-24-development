@@ -79,5 +79,26 @@ npm run dev
 - 列表接口统一返回 `{ items, total, page, size }`，动作接口统一返回 `{ ok, message }`。
 - 状态流转只允许在 `app/services` 里改，路由层不做业务判断。
 
+## 字段转换器：规则影响明细与发布预检
+
+字段转换器在通用清单之外提供「按目标列反查受影响规则」的入口，配套接口由
+`backend/app/routers/impact.py` 承载：
+
+- `GET /api/field_transform/impact`：以 Schema 名称/版本、来源字段、目标字段定位规则，
+  并可按绑定状态（生效中/候选/已停用/已失效）筛选；每行带实际样本、同版同目标的
+  竞争来源及样本采用方、报表规则引用与当前绑定。
+- `POST /api/field_transform/rules/{id}/edit`：编辑生效规则时沉淀接棒的新版本，
+  旧版本保留为「已失效」并写入失效原因；候选规则只另存草稿，不影响在用规则。
+- `POST /api/field_transform/rules/{id}/rerun`：从查询行重跑，可带报表引用和样本，
+  旧引用重跑会返回「版本已失效」原因与当前绑定；每次重跑写入预览留痕。
+- `GET /api/field_transform/previews`：按规则或引用查询预览/重跑留痕，供独立核对。
+- `GET /api/schema_registry/impact`：Schema 注册中心侧的影响目标列清单。
+- `POST /api/schema_registry/rerun-column`：发布前拿报表中的规则引用重跑选中目标列。
+
+样本、报表引用、预览留痕存于内部表 `transform_samples` / `transform_refs` /
+`transform_previews`，不计入 20 个业务模块，也不能通过通用资源路由访问。
+前端入口为侧边栏「转换规则影响明细」「Schema影响目标列」，两个模块的工作台页
+也各有一个跳转按钮。
+
 领域：数据工程
 子方向：数据采集、爬虫与RPA

@@ -6,6 +6,14 @@
         <p class="page-desc">{{ meta.desc }}</p>
       </div>
       <div class="page-actions">
+        <RouterLink
+          v-if="impactPath"
+          class="btn"
+          :data-testid="`impact-entry-${meta.key}`"
+          :to="impactPath"
+        >
+          {{ impactLabel }}
+        </RouterLink>
         <button class="btn primary" data-testid="open-create" type="button" @click="openCreate">
           登记{{ meta.entity }}
         </button>
@@ -107,6 +115,14 @@ import type { EntryRow } from '@/data/types'
 
 const props = defineProps<{ moduleKey: string }>()
 const meta = moduleMeta(props.moduleKey)
+// 字段转换器与 Schema 注册中心各自挂一个影响明细入口，按目标列反查受影响规则。
+const IMPACT_LINKS: Record<string, { path: string; label: string }> = {
+  field_transform: { path: '/field_transform/impact', label: '规则影响明细' },
+  schema_registry: { path: '/schema_registry/impact', label: '影响目标列与发布预检' },
+}
+const impactLink = IMPACT_LINKS[props.moduleKey]
+const impactPath = impactLink?.path ?? ''
+const impactLabel = impactLink?.label ?? ''
 const rows = ref<EntryRow[]>([])
 const total = ref(0)
 const errorMessage = ref('')
